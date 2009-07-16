@@ -2,13 +2,20 @@ package org.hackatron.ocrsudoku;
 
 import java.util.ArrayList;
 
-public class OpticalCharacterRecognition {
+import android.app.Service;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.IBinder;
+
+public class OCR {
 	private int _width;
 	private int _height;
 
 	private ArrayList<Neuron> _neuronList;
 
-	public OpticalCharacterRecognition(int width, int height) {
+	public OCR(int width, int height) {
 		_width = width;
 		_height = height;
 		_neuronList = new ArrayList<Neuron>();
@@ -63,4 +70,6 @@ public class OpticalCharacterRecognition {
 
 		return bestNeuron.getCharacter();
 	}
+
+
 }
