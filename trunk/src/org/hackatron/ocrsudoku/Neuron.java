@@ -23,6 +23,8 @@ public class Neuron {
 	public Neuron(char character, int width, int height) {
 
 		_character = character;
+		_width = width;
+		_height = height;
 
 		_eta = 0.20f;
 		_rand = new Random(System.nanoTime());
