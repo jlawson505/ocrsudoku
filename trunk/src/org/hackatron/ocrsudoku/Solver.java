@@ -45,30 +45,24 @@ public class Solver  {
 		 * p_size = box_size
 		 * 
 		 */
+
+		int v = 0;
 		
-		/* -- CHECK ROW --
-		 * Test each number in row 'y' 
-		 * if a number 'v' is present 
-		 * the index in possible is maked as n/a (0)
-		 */
 		for (int i=0; i < p_dim; i++) {
-			int v = get(input, i, y);
-			assert (v <= 9);
+			v = get(input, i, y);
+			if (v > 0)
+				possible[v-1] = 0; 
+			v = get(input, x, i);
 			if (v > 0)
 				possible[v-1] = 0; 
 		}
-		/* -- CHECK COL -- */
-		for (int i=0; i < p_dim; i++) {
-			int v = get(input, x, i);
-			assert (v <= 9);
-			if (v > 0)
-				possible[v-1] = 0; 
-		}
+
 		/* Check Adjacent */
 		int[] adjacent = get_adjacent(input, x, y);
+		
 		for (int i=0; i < p_dim-1; i++) {
-			int v = adjacent[i];
-			assert (v <= 9);
+			v = adjacent[i];
+	
 			if (v > 0)
 				possible[v-1] = 0; 
 		}
