@@ -1,5 +1,8 @@
 package org.hackatron.ocrsudoku;
 
+import org.hackatron.ocrsudoku.R;
+import org.hackatron.ocrsudoku.R.layout;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
