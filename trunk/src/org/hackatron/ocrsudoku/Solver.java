@@ -113,28 +113,40 @@ public class Solver  {
   		 * Starting point...
   		 * */
   		
-  		for (int n = 1; n < 9; n++)
+  		int start_x = 0;
+  		int start_y = 0;
+  		int c = 10;
+  		int [] start_v = new int[10];
+  		
 		for (int x = 0; x < p_dim; x++) {
 			for (int y = 0; y < p_dim; y++) {
-
-					if (get(p,x,y) != 0)
-						continue;
+				if (get(p,x,y) != 0)
+					continue;
 					
-  					int[] v = valid(p, x, y);
-
-  					if (v.length <= n && v.length > 0) {
-  						for (int i = 0; i < v.length; i++) {
-  							p[x+y*9] = v[i];
-
-  							if (check  (p) )
-  								return p;
-  							return solver (p,ttl-1);
-  						}
-  					}
-			}
+  				int[] v = valid(p, x, y);
+  				
+  				if ( v.length < c && v.length > 0) {
+  					start_x = x;
+  					start_y = y;
+  					c = v.length;
+  					start_v = v;
+  				}
+  			}
 		}
-		  		
-  		return p;
+		
+		if ( c == 10 ) 
+			return check(p)?p:null;
+		
+		for (int i = 0; i < start_v.length; i++) {
+			p[start_x+start_y*9] = start_v[i];
+			int [] p_ret = solver (p, ttl-1);
+			if (p_ret != null)
+				return p_ret;
+			else
+				p[start_x+start_y*9] = 0;
+		}
+		
+  		return null;
 	}
 	
   	public Solver(int size) {

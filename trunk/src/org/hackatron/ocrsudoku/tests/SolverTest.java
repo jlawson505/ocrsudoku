@@ -124,7 +124,7 @@ public class SolverTest extends TestCase {
 		
 		assert (puzzle_o.length == 9*9);
 		
-		for (int i = 0; i < 9*9; i++) 
+		for (int i = 0; i < 9*9; i++)
 			assertEquals(puzzle1_s[i], puzzle_o[i]);
 		
 	}	
