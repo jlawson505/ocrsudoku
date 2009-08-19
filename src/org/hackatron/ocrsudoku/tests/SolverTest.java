@@ -61,7 +61,6 @@ public class SolverTest extends TestCase {
 			assert (v_result[i] == 2 || 
 					v_result[i] == 5);
 		
-
 	}
 
 
