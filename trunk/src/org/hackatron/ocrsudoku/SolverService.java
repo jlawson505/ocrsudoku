@@ -9,6 +9,32 @@ import android.graphics.Matrix;
 import android.os.IBinder;
 import android.util.Log;
 
+/**
+ * 
+ *  CameraView             +---------> ImageDecode
+ *       |                 |
+ * SudokuActivity -> SolverService --> OCR -> Neuron  
+ *       |                 |
+ *   HUDView               +---------> Solver
+ * 
+ * 
+ * 
+ * SolverService
+ *  - Tråd för hantering av kameran
+ *  - CameraView-objekt måste skickas som parameter i start-intent:et
+ *  - Skickar Broadcast Intent när en giltig bild har detekterats med ImageDecode
+ *  - Skickar Broadcast Intents när pusslet processas
+ *  - Skickar Broadcast Intent när algoritmen
+ *  - Lyssnar på knapptryckningar
+ *
+ * ImageDecode 
+ *  
+ *  
+ *  
+ * @author jonas
+ *
+ */
+
 public class SolverService extends Service {
 	final static String TAG = "Sudoku";
 
@@ -40,6 +66,17 @@ public class SolverService extends Service {
 	public IBinder onBind(Intent intent) {
 		// TODO Auto-generated method stub
 
-		return null;
+		Log.d(TAG,"Service onBind!");
+		
+		return mBinder;
 	}
+    /**
+     * The Solver interface is defined through IDL
+     */
+    private final ISolverService.Stub mBinder = new ISolverService.Stub() {
+        public void startSolving() {
+        	Log.d(TAG,"Service.startSolving was called");
+        }
+    };
+
 }
