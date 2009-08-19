@@ -35,8 +35,6 @@ class HUDView implements GLSurfaceView.Renderer{
 	private int _width;
     private int _height;
     private Context _context;
-    private Quad _quad;
-    private Grid _grid;
     private int _textureID;
     private int frames;
     private int _msPerFrame;
@@ -45,22 +43,28 @@ class HUDView implements GLSurfaceView.Renderer{
     private long _startTime;
     private LabelMaker _labelMaker;
     private Paint _labelPaint;
-    private int _labelA;
-    private int _labelB;
-    private int _labelC;
     private int _labelMsPF;
     private Projector _projector;
     private NumericSprite _numericSprite;
     private float[] mScratch = new float[8];
+    
+    private int[] _sudukoArray = new int[] {
+			1,2,3,4,5,6,7,8,9,
+			2,3,4,5,6,7,8,9,1,
+			3,4,5,6,7,8,9,1,2,
+			4,5,6,7,8,9,1,2,3,
+			5,6,7,8,9,1,2,3,4,
+			6,7,8,9,1,2,3,4,5,
+			7,8,9,1,2,3,4,5,6,
+			8,9,1,2,3,4,5,6,7,
+			9,1,2,3,4,5,6,7,8};
 	    
     public HUDView(Context context) {
         _context = context;
-        _quad = new Quad();
-        _grid = new Grid(64,64);
         _projector = new Projector();
        
         _labelPaint = new Paint();
-        _labelPaint.setTextSize(32);
+        _labelPaint.setTextSize(20);
         _labelPaint.setAntiAlias(true);
         _labelPaint.setARGB(0xff, 0x00, 0x00, 0x00);
     }
@@ -96,17 +100,6 @@ class HUDView implements GLSurfaceView.Renderer{
         gl.glEnable(GL10.GL_DEPTH_TEST);
         gl.glEnable(GL10.GL_TEXTURE_2D);
 
-        /*
-         * Create our texture. This has to be done each time the
-         * surface is created.
-         */
-
-        int[] textures = new int[1];
-        gl.glGenTextures(1, textures, 0);
-
-        _textureID = textures[0];
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, _textureID);
-
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
 
@@ -114,22 +107,7 @@ class HUDView implements GLSurfaceView.Renderer{
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
 
         gl.glTexEnvf(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
-
-        InputStream is = _context.getResources().openRawResource(R.drawable.character3);
-        Bitmap bitmap;
-        try {
-            bitmap = BitmapFactory.decodeStream(is);
-        } finally {
-            try {
-                is.close();
-            } catch(IOException e) {
-                // Ignore.
-            }
-        }
-
-        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
-        bitmap.recycle();
-
+        
         if (_labelMaker != null) {
             _labelMaker.shutdown(gl);
         } else {
@@ -137,12 +115,9 @@ class HUDView implements GLSurfaceView.Renderer{
         }
         _labelMaker.initialize(gl);
         _labelMaker.beginAdding(gl);
-        _labelA = _labelMaker.add(gl, "A", _labelPaint);
-        _labelB = _labelMaker.add(gl, "B", _labelPaint);
-        _labelC = _labelMaker.add(gl, "C", _labelPaint);
         _labelMsPF = _labelMaker.add(gl, "ms/f", _labelPaint);
         _labelMaker.endAdding(gl);
-
+        
         if (_numericSprite != null) {
             _numericSprite.shutdown(gl);
         } else {
@@ -159,8 +134,7 @@ class HUDView implements GLSurfaceView.Renderer{
          * especially on software renderer.
          */
         gl.glDisable(GL10.GL_DITHER);
-        //gl.glTexEnvx(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_MODULATE);
-
+        
         /*
          * Usually, the first thing one might want to do is to clear
          * the screen. The most efficient way of doing this is to use
@@ -175,53 +149,67 @@ class HUDView implements GLSurfaceView.Renderer{
         gl.glLoadIdentity();
 
         GLU.gluLookAt(gl, 0.0f, 0.0f, -5.0f,
-                0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f);
-
+                	      0.0f, 0.0f, 0.0f,
+                	      0.0f, 1.0f, 0.0f);
+        
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
         gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
         
-        gl.glDisable(GL10.GL_TEXTURE_2D);
+        gl.glEnable(GL10.GL_TEXTURE_2D);
 
         gl.glActiveTexture(GL10.GL_TEXTURE0);
         gl.glBindTexture(GL10.GL_TEXTURE_2D, _textureID);
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
 
-        long time = SystemClock.uptimeMillis() % 4000L;
-        float angle = 0.090f * ((int) time);
-
-        gl.glRotatef(angle, 0.0f, 1.0f, 0.0f);
-        float quadWidth = 1.5f;
+        float msPFX = _width - _labelMaker.getWidth(_labelMsPF) - 1;
         
-        gl.glScalef(0.5f, 0.5f, 0.5f);
-        gl.glTranslatef(-quadWidth * 4,-quadWidth * 4, 0.0f);
-        
-        for(int x=0; x<9; x++)
-        {
-        	gl.glTranslatef(quadWidth,0.0f, 0.0f);
-        	for(int y=0; y<9; y++)
-            {
-        		gl.glTranslatef(0.0f,quadWidth, 0.0f);
-        		_quad.draw(gl);
-            }
-        	gl.glTranslatef(0.0f,-quadWidth*9, 0.0f);
-        }
+        _projector.getCurrentModelView(gl);
+        _labelMaker.beginDrawing(gl, _width, _height);
+        _labelMaker.draw(gl, msPFX, 0, _labelMsPF);
+        _labelMaker.endDrawing(gl);
 
-        
-
-//        _projector.getCurrentModelView(gl);
-//        _labelMaker.beginDrawing(gl, _width, _height);
-//        drawLabel(gl, 0, _labelA);
-//        drawLabel(gl, 1, _labelB);
-//        drawLabel(gl, 2, _labelC);
-//        float msPFX = _width - _labelMaker.getWidth(_labelMsPF) - 1;
-//        _labelMaker.draw(gl, msPFX, 0, _labelMsPF);
-//        _labelMaker.endDrawing(gl);
-
-//        drawMsPF(gl, msPFX);
+        drawSuduko(gl);
+        drawMsPF(gl, msPFX);
     }
+	
+	  private void drawSuduko(GL10 gl) {
+		  
+		  float width = _width / 1.5f;
+		  float height = _height / 1.5f;
+		  
+		  float length = 0.0f;
+		  if(width > height)
+		  {
+			  length = height;			 
+		  }
+		  else
+		  {
+			  length = width;			
+		  }
+		  
+		  float xOffset = (_width - length) / 2.0f;
+		  float yOffset = (_height - length) / 2.0f;			  
+		  
+		  // TODO: Check if rendering numbers in groups are faster...
+		  for(int x = 0; x < 9; x++) {
+			  for(int y = 0; y < 9; y++) {
+				  int value = _sudukoArray[y*9 + x];
+				  
+				  float xPosition = xOffset + (float)x / 9.0f * length;
+				  float yPosition = yOffset + length - ((float)y / 9.0f * length);
+				  
+				  _numericSprite.setValue(value);				  
+				  float numWidth = _numericSprite.width();
+				  
+				  _numericSprite.draw(gl, 
+						  xPosition + (numWidth / 2.0f), 
+						  yPosition, 
+						  _width, _height);
+			  }
+		  }
+	  }
 
     private void drawMsPF(GL10 gl, float rightMargin) {
         long time = SystemClock.uptimeMillis();
@@ -237,30 +225,9 @@ class HUDView implements GLSurfaceView.Renderer{
         if (_msPerFrame > 0) {
             _numericSprite.setValue(_msPerFrame);
             float numWidth = _numericSprite.width();
-            float x = rightMargin - numWidth;
+            float x = rightMargin - numWidth - 10;
             _numericSprite.draw(gl, x, 0, _width, _height);
         }
-    }
-
-	private void drawLabel(GL10 gl, int triangleVertex, int labelId) {
-        float x = _quad.getX(triangleVertex);
-        float y = _quad.getY(triangleVertex);
-        
-        mScratch[0] = x;
-        mScratch[1] = y;
-        mScratch[2] = 0.0f;
-        mScratch[3] = 1.0f;
-      
-        _projector.project(mScratch, 0, mScratch, 4);
-        
-        float sx = mScratch[4];
-        float sy = mScratch[5];
-        float height = _labelMaker.getHeight(labelId);
-        float width = _labelMaker.getWidth(labelId);
-        float tx = sx - width * 0.5f;
-        float ty = sy - height * 0.5f;
-       
-        _labelMaker.draw(gl, tx, ty, labelId);
     }
 
     @Override
@@ -275,7 +242,6 @@ class HUDView implements GLSurfaceView.Renderer{
         * each time we draw, but usually a new projection needs to
         * be set when the viewport is resized.
         */
-
         float ratio = (float) width / height;
         gl.glMatrixMode(GL10.GL_PROJECTION);
         gl.glLoadIdentity();
