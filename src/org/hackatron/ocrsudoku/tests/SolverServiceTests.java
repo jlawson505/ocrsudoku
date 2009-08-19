@@ -36,4 +36,6 @@ public class SolverServiceTests extends ServiceTestCase<SolverService> {
 
 		assertNotNull(getService());
 	}
+	
+	
 }
