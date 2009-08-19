@@ -77,6 +77,7 @@ public class Quad {
             _indexBuffer.put((short) i);
         }
 
+        _colorBuffer.position(0);
         _vertexBuffer.position(0);
         _texBuffer.position(0);
         _indexBuffer.position(0);
@@ -90,12 +91,4 @@ public class Quad {
         gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, _texBuffer);
         gl.glDrawElements(GL10.GL_TRIANGLE_STRIP, VERTS, GL10.GL_UNSIGNED_SHORT, _indexBuffer);
     }
-
-    public float getX(int vertex) {
-        return _coords[3*vertex];
-    }
-
-    public float getY(int vertex) {
-        return _coords[3*vertex+1];
-    }   
 }

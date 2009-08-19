@@ -25,6 +25,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import org.hackatron.ocrsudoku.graphics.Grid;
 import org.hackatron.ocrsudoku.graphics.LabelMaker;
+import org.hackatron.ocrsudoku.graphics.Lines;
 import org.hackatron.ocrsudoku.graphics.NumericSprite;
 import org.hackatron.ocrsudoku.graphics.Projector;
 import org.hackatron.ocrsudoku.graphics.Quad;
@@ -35,7 +36,6 @@ class HUDView implements GLSurfaceView.Renderer{
 	private int _width;
     private int _height;
     private Context _context;
-    private int _textureID;
     private int frames;
     private int _msPerFrame;
     private final static int SAMPLE_PERIOD_FRAMES = 12;
@@ -46,7 +46,7 @@ class HUDView implements GLSurfaceView.Renderer{
     private int _labelMsPF;
     private Projector _projector;
     private NumericSprite _numericSprite;
-    private float[] mScratch = new float[8];
+    private Lines _gridLines;
     
     private int[] _sudukoArray = new int[] {
 			1,2,3,4,5,6,7,8,9,
@@ -95,18 +95,9 @@ class HUDView implements GLSurfaceView.Renderer{
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT,
                 GL10.GL_FASTEST);
 
-        gl.glClearColor(1.0f, 1.0f, 1.0f, 1);
+        gl.glClearColor(0.5f, 0.5f, 0.5f, 1);
         gl.glShadeModel(GL10.GL_SMOOTH);
         gl.glEnable(GL10.GL_DEPTH_TEST);
-        gl.glEnable(GL10.GL_TEXTURE_2D);
-
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
-
-        gl.glTexEnvf(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
         
         if (_labelMaker != null) {
             _labelMaker.shutdown(gl);
@@ -124,6 +115,8 @@ class HUDView implements GLSurfaceView.Renderer{
             _numericSprite = new NumericSprite();
         }
         _numericSprite.initialize(gl, _labelPaint);
+        
+        _gridLines = new Lines();
     }
 
 	@Override
@@ -148,21 +141,13 @@ class HUDView implements GLSurfaceView.Renderer{
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glLoadIdentity();
 
-        GLU.gluLookAt(gl, 0.0f, 0.0f, -5.0f,
-                	      0.0f, 0.0f, 0.0f,
-                	      0.0f, 1.0f, 0.0f);
-        
+        gl.glOrthof(0.0f, _width, 0.0f, _height, 0.0f, 10.0f);
+       
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
         gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+        gl.glDisable(GL10.GL_TEXTURE_2D);
+        gl.glLineWidth(1.0f);      
         
-        gl.glEnable(GL10.GL_TEXTURE_2D);
-
-        gl.glActiveTexture(GL10.GL_TEXTURE0);
-        gl.glBindTexture(GL10.GL_TEXTURE_2D, _textureID);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
-
         float msPFX = _width - _labelMaker.getWidth(_labelMsPF) - 1;
         
         _projector.getCurrentModelView(gl);
@@ -172,7 +157,7 @@ class HUDView implements GLSurfaceView.Renderer{
 
         drawSuduko(gl);
         drawMsPF(gl, msPFX);
-    }
+      }
 	
 	  private void drawSuduko(GL10 gl) {
 		  
