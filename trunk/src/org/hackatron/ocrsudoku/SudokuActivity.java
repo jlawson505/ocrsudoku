@@ -8,7 +8,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.text.Editable;
 import android.text.method.KeyListener;
@@ -31,6 +33,7 @@ public class SudokuActivity extends Activity {
 			mSolverService = ISolverService.Stub.asInterface(service);
 			
 			try {
+				//mSolverService.connectCallback(mHandler);
 				mSolverService.startSolving();
 			} catch (RemoteException e) {
 				// TODO Auto-generated catch block
@@ -64,5 +67,23 @@ public class SudokuActivity extends Activity {
         setContentView(_hudView);
         
     }
+
+  
+    
+    private Handler mHandler = new Handler() {
+        @Override public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 1:                
+                    Log.d(TAG,"Handler: Received from service: " + msg.arg1);
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+
+    };
+
+    
+    
 	    
 }
